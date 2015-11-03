@@ -1,0 +1,24 @@
+{
+  "name": "legalweb/psb-command-auditing",
+  "description": "A plugin to audit commands in PSB.",
+  "type": "library",
+  "require": {
+    "prooph/service-bus": "~4.6",
+    "psr/log": "^1.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~4.8",
+    "fabpot/php-cs-fixer": "1.7.*",
+    "satooshi/php-coveralls": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "Prooph\\ServiceBus\\Plugin\\Auditing\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "ProophTest\\ServiceBus\\Plugin\\Auditing\\": "tests"
+    }
+  }
+}
