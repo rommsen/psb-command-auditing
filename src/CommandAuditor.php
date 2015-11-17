@@ -6,8 +6,6 @@ use Prooph\Common\Event\ActionEvent;
 use Prooph\Common\Event\ActionEventEmitter;
 use Prooph\Common\Event\ActionEventListenerAggregate;
 use Prooph\Common\Event\DetachAggregateHandlers;
-use Prooph\Common\Messaging\DomainMessage;
-use Prooph\Common\Messaging\MessageConverter;
 use Prooph\ServiceBus\MessageBus;
 use Psr\Log\LoggerInterface;
 
@@ -18,39 +16,17 @@ final class CommandAuditor implements ActionEventListenerAggregate
     /** @var LoggerInterface */
     private $logger;
 
-    /** @var MessageConverter */
-    private $messageConverter;
-
-    /** @var array */
-    private $meta;
+    /** @var MessageSerializer */
+    private $messageSerializer;
 
     /**
      * @param LoggerInterface $logger
-     * @param MessageConverter $messageConverter
-     * @param array $meta May contain user id, or even ip address.
+     * @param MessageSerializer $messageSerializer
      */
-    public function __construct(LoggerInterface $logger, MessageConverter $messageConverter, array $meta)
+    public function __construct(LoggerInterface $logger, MessageSerializer $messageSerializer)
     {
         $this->logger = $logger;
-        $this->messageConverter = $messageConverter;
-        $this->meta = $meta;
-    }
-
-    /**
-     * @param string $key
-     * @param mixed $value
-     */
-    public function setMeta($key, $value)
-    {
-        $this->meta[$key] = $value;
-    }
-
-    /**
-     * @return array
-     */
-    public function meta()
-    {
-        return $this->meta;
+        $this->messageSerializer = $messageSerializer;
     }
 
     /**
@@ -74,7 +50,9 @@ final class CommandAuditor implements ActionEventListenerAggregate
             return;
         }
 
-        $data = $this->extractCommandData($event);
+        $command = $event->getParam(MessageBus::EVENT_PARAM_MESSAGE);
+
+        $data = $this->messageSerializer->serializeCommand($command);
         $data['success'] = true;
         $this->logger->info(json_encode($data));
     }
@@ -85,43 +63,15 @@ final class CommandAuditor implements ActionEventListenerAggregate
     public function onErrorCommand(ActionEvent $event)
     {
         $exception = $event->getParam(MessageBus::EVENT_PARAM_EXCEPTION);
-        $data = $this->extractCommandData($event);
+
+        $command = $event->getParam(MessageBus::EVENT_PARAM_MESSAGE);
+        $data = $this->messageSerializer->serializeCommand($command);
         $data['success'] = false;
 
         if ($exception instanceof \Exception) {
-            $data['exception'] = [
-                'type' => get_class($exception),
-                'message' => $exception->getMessage(),
-                'code' => $exception->getCode(),
-                'file' => $exception->getFile(),
-                'line' => $exception->getLine(),
-            ];
+            $data['exception'] = $this->messageSerializer->serializeException($exception);
         }
 
         $this->logger->error(json_encode($data));
-    }
-
-    /**
-     * @param ActionEvent $event
-     * @return array
-     */
-    private function extractCommandData($event)
-    {
-        $command = $event->getParam(MessageBus::EVENT_PARAM_MESSAGE);
-        $data = [];
-
-        if ($command instanceof DomainMessage) {
-            $data = $this->messageConverter->convertToArray($command);
-        }
-
-        if (is_object($command)) {
-            $command = get_class($command);
-        }
-
-        return [
-            'command' => $command,
-            'data' => $data,
-            'meta' => $this->meta,
-        ];
     }
 }

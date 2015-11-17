@@ -8,6 +8,7 @@ use Prooph\Common\Event\ListenerHandler;
 use Prooph\Common\Messaging\NoOpMessageConverter;
 use Prooph\ServiceBus\MessageBus;
 use Prooph\ServiceBus\Plugin\Auditing\CommandAuditor;
+use Prooph\ServiceBus\Plugin\Auditing\MessageSerializer;
 use Prophecy\Argument;
 use Psr\Log\LoggerInterface;
 
@@ -17,10 +18,7 @@ class CommandAuditorTest extends \PHPUnit_Framework_TestCase
     private $logger;
 
     /** @var NoOpMessageConverter */
-    private $messageConverter;
-
-    /** @var array */
-    private $meta;
+    private $messageSerializer;
 
     /** @var CommandAuditor */
     private $SUT;
@@ -30,13 +28,11 @@ class CommandAuditorTest extends \PHPUnit_Framework_TestCase
         parent::setUp();
 
         $this->logger = $this->prophesize(LoggerInterface::class);
-        $this->messageConverter = new NoOpMessageConverter;
-        $this->meta = ['user' => 'Test'];
+        $this->messageSerializer = $this->prophesize(MessageSerializer::class);
 
         $this->SUT = new CommandAuditor(
             $this->logger->reveal(),
-            $this->messageConverter,
-            $this->meta
+            $this->messageSerializer->reveal()
         );
     }
 
@@ -96,19 +92,5 @@ class CommandAuditorTest extends \PHPUnit_Framework_TestCase
         $event->setParam(MessageBus::EVENT_PARAM_EXCEPTION, new \Exception);
 
         $this->SUT->onFinalizeCommand($event);
-    }
-
-    /**
-     * @todo
-     */
-    public function it_serializes_command()
-    {
-    }
-
-    /**
-     * @todo
-     */
-    public function it_serializes_exception()
-    {
     }
 }
