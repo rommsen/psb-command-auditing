@@ -3,7 +3,7 @@
   "description": "A plugin to audit commands in PSB.",
   "type": "library",
   "require": {
-    "prooph/service-bus": "~4.6",
+    "prooph/service-bus": ">=4.6 <6.0",
     "psr/log": "^1.0"
   },
   "require-dev": {
