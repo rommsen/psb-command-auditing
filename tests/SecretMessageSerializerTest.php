@@ -49,10 +49,15 @@ class SecretMessageSerializerTest extends \PHPUnit_Framework_TestCase
     public function it_will_return_obscure_values_for_items_in_secret_array()
     {
         $command = 'string_command';
-        $expected = ['password' => '[SECRET]', 'abc' => '123'];
+        $expected = ['password' => '[SECRET]', 'abc' => '123', 'numeric_array' => ['foo', 'bar']];
+
         $this->messageSerializer->serializeCommand($command)->willReturn([
             'password' => '123',
             'abc' => '123',
+            'numeric_array' => [
+                'foo',
+                'bar'
+            ]
         ]);
 
         $actual = $this->SUT->serializeCommand($command);

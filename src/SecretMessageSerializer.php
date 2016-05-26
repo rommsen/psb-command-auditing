@@ -59,7 +59,7 @@ class SecretMessageSerializer implements MessageSerializer
     private function obscureArray(array $data)
     {
         foreach ($data as $key => $value) {
-            if (in_array($key, $this->secretFields)) {
+            if (in_array($key, $this->secretFields, true)) {
                 $data[$key] = $this->placeHolder;
             }
 
